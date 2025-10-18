@@ -54,17 +54,9 @@ function findMatchingProfile(features: string[]) {
   profileScores.sort((a, b) => b.score - a.score)
   const bestMatch = profileScores[0]
   
-  // Changed: Add validation for bestMatch before accessing properties
-  if (!bestMatch) {
-    return {
-      status: 'not_found' as SearchStatus,
-      username: undefined,
-      profileUrl: undefined
-    }
-  }
-  
+  // Fixed: Added proper undefined check for bestMatch
   // Require at least 30% match to consider it "found"
-  if (bestMatch.score >= 0.3) {
+  if (bestMatch && bestMatch.score >= 0.3) {
     return {
       status: 'found' as SearchStatus,
       username: bestMatch.profile.username,
@@ -120,7 +112,7 @@ export async function POST(request: NextRequest) {
         found_username: matchResult.username || '',
         profile_url: matchResult.profileUrl || '',
         search_status: matchResult.status,
-        search_date: new Date().toISOString() // Changed: Always use current date as ISO string
+        search_date: new Date().toISOString()
       }
     })
 

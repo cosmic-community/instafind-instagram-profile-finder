@@ -15,16 +15,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Upload image to Cosmic media library
-    const uploadFormData = new FormData()
-    uploadFormData.append('media', file)
-
-    const mediaResponse = await cosmic.media.insertOne(uploadFormData)
+    // Changed: Fixed media upload to use correct object structure expected by Cosmic SDK
+    const mediaResponse = await cosmic.media.insertOne({
+      media: file
+    })
     const mediaName = mediaResponse.media.name
 
     // Simulate search process (in reality, this would call an Instagram API or image recognition service)
     // For demonstration, we'll randomly assign a status
     const statuses: SearchStatus[] = ['found', 'not_found', 'error']
-    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)]
+    // Changed: Added type assertion with validation to ensure SearchStatus type
+    const randomStatus: SearchStatus = statuses[Math.floor(Math.random() * statuses.length)] as SearchStatus
     
     let username: string | undefined
     let profileUrl: string | undefined

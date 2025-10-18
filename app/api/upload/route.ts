@@ -104,13 +104,14 @@ export async function POST(request: NextRequest) {
     const matchResult = findMatchingProfile(features)
     
     // Create search result object in Cosmic
+    // Fixed: Added explicit type safety for username and profileUrl
     await cosmic.objects.insertOne({
       type: 'search-results',
       title: `Search - ${new Date().toLocaleString()}`,
       metadata: {
         uploaded_image: mediaName,
-        found_username: matchResult.username || '',
-        profile_url: matchResult.profileUrl || '',
+        found_username: matchResult.username ?? '',
+        profile_url: matchResult.profileUrl ?? '',
         search_status: matchResult.status,
         search_date: new Date().toISOString()
       }

@@ -42,7 +42,8 @@ async function analyzeImage(file: File): Promise<string[]> {
 }
 
 // Match features to profiles
-function findMatchingProfile(features: string[]) {
+// Changed: Return type now always returns strings (empty strings instead of undefined)
+function findMatchingProfile(features: string[]): { status: SearchStatus; username: string; profileUrl: string } {
   // Calculate match scores for each profile
   const profileScores = DEMO_PROFILES.map(profile => {
     const matchingFeatures = features.filter(f => profile.features.includes(f))
@@ -54,7 +55,6 @@ function findMatchingProfile(features: string[]) {
   profileScores.sort((a, b) => b.score - a.score)
   const bestMatch = profileScores[0]
   
-  // Fixed: Added proper undefined check for bestMatch
   // Require at least 30% match to consider it "found"
   if (bestMatch && bestMatch.score >= 0.3) {
     return {
@@ -64,10 +64,11 @@ function findMatchingProfile(features: string[]) {
     }
   }
   
+  // Changed: Return empty strings instead of undefined for type consistency
   return {
     status: 'not_found' as SearchStatus,
-    username: undefined,
-    profileUrl: undefined
+    username: '',
+    profileUrl: ''
   }
 }
 
@@ -104,14 +105,14 @@ export async function POST(request: NextRequest) {
     const matchResult = findMatchingProfile(features)
     
     // Create search result object in Cosmic
-    // Fixed: Added explicit type safety for username and profileUrl
+    // Changed: No longer need nullish coalescing since matchResult always returns strings
     await cosmic.objects.insertOne({
       type: 'search-results',
       title: `Search - ${new Date().toLocaleString()}`,
       metadata: {
         uploaded_image: mediaName,
-        found_username: matchResult.username ?? '',
-        profile_url: matchResult.profileUrl ?? '',
+        found_username: matchResult.username,
+        profile_url: matchResult.profileUrl,
         search_status: matchResult.status,
         search_date: new Date().toISOString()
       }
@@ -119,8 +120,8 @@ export async function POST(request: NextRequest) {
 
     const response: UploadResponse = {
       success: true,
-      username: matchResult.username,
-      profileUrl: matchResult.profileUrl,
+      username: matchResult.username || undefined,
+      profileUrl: matchResult.profileUrl || undefined,
       status: matchResult.status,
       message: matchResult.status === 'found' 
         ? `Profile found! Match confidence: ${Math.floor(Math.random() * 30 + 70)}%` 
